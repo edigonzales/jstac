@@ -1,0 +1,9 @@
+allprojects {
+    apply from: "$rootDir/gradle/versioning.gradle"
+ 
+    repositories {
+        mavenCentral()
+    }
+}
+
+group = 'io.github.sogis'
