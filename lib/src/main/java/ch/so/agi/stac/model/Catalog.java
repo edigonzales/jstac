@@ -107,11 +107,15 @@ public class Catalog {
         // haben. Also ist es nicht nur an der Klasse anzuhängen.
         
         // Vielleicht doch am einfachsten "parent", "root" und ggf. andere als eigenständige
-        // Variablen führen und mein adden des Childs dem Child adden.
+        // Variablen führen und mein adden des Childs dem Child adden. Das muss dann aber bis zum letzten Kind gehen und
+        // nicht nur das Kind selber (Item, asset?). Item zeigt auch wieder auf root-Katalog.
         // "root" immer das new File()-Verzeichnis als Default? Wenn es ein File ist (und kein String),
         // wird der Pfadt (../../etc pp) richtig gehandelt. resp. das Wissen liegt vorg.
         // Ah: Der PublicationType eines Kindes hat nach dem Adden zum Parent keine Bedeutung mehr, sonst
         // geht es ja nicht, da Widerspruch möglich.
+        
+        // Root Link nur beim Saven behandeln, wenn er nicht null ist? Weil ich muss ihn ja mindestens
+        // für den root-catalog beim Saven behandeln.
         
         Link rootLink = new Link();
         rootLink.rel("root").type(LinkMimeType.APPLICATION_JSON);
