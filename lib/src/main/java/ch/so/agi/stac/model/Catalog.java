@@ -2,6 +2,7 @@ package ch.so.agi.stac.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -17,7 +18,6 @@ public class Catalog {
     @JsonProperty("stac_version")
     private String stacVersion;
     
-    @JsonProperty("type")
     private CatalogType type = CatalogType.CATALOG;
 
     @JsonProperty("title")
@@ -28,6 +28,18 @@ public class Catalog {
     
     @JsonProperty("links")
     private Collection<Link> links = new ArrayList<>();
+    
+    private String selfHref;
+    
+    private String fileName = "catalog.json";
+    
+    public String getType() {
+        return type.toString();
+    }
+
+    public void setSelfHref(String selfHref) {
+        this.selfHref = selfHref;
+    }
     
     public Catalog id(String id) {
         this.id = id;
@@ -48,15 +60,27 @@ public class Catalog {
         this.description = description;
         return this;
     }
-
     
+    // TODO nötig?
     public Catalog links(Collection<Link> links) {
         this.links = links;
         return this;
     }
     
-    public void save(File file) throws StreamWriteException, DatabindException, IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.writeValue(file, this);
+    public void save(PublicationType publicationType, File file) throws StreamWriteException, DatabindException, IOException {
+        if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
+            System.out.println("*********");
+            
+            Link selfLink = new Link();
+            selfLink.rel("self").href(selfHref).type(LinkMimeType.APPLICATION_JSON);
+            links.add(selfLink);
+            
+            fileName = selfHref.substring(selfHref.lastIndexOf('/')+1, selfHref.length());
+        }
+        
+        File resultFile = Paths.get(file.getAbsolutePath(), fileName).toFile();
+        
+        ObjectMapper objectMapper = new ObjectMapper(); // TODO: Singleton o.ä.?
+        objectMapper.writeValue(resultFile, this);
     }
 }

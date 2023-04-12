@@ -1,0 +1,21 @@
+package ch.so.agi.stac.model;
+
+public enum LinkMimeType {
+    APPLICATION_JSON("application/json");
+    
+    private String value;
+
+    LinkMimeType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+}

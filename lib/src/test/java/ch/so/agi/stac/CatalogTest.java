@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.so.agi.stac.model.Catalog;
+import ch.so.agi.stac.model.PublicationType;
 
 public class CatalogTest {
     static Logger log = LoggerFactory.getLogger(CatalogTest.class);
@@ -19,7 +20,8 @@ public class CatalogTest {
                 .title("Geodaten des Kantons Solothurn")
                 .description("Geodaten des Kantons Solothurn als STAC");
         
-        catalog.save(new File("/Users/stefan/tmp/catalog.json"));
+        catalog.setSelfHref("http://localhost:8080/stac/catalog.json");
+        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/"));
     }
 
 }
