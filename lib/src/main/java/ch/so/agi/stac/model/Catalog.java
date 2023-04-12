@@ -117,6 +117,9 @@ public class Catalog {
         // Root Link nur beim Saven behandeln, wenn er nicht null ist? Weil ich muss ihn ja mindestens
         // für den root-catalog beim Saven behandeln.
         
+        // Ah damn it. Wenn ich aber rootlink dfeaultmässig setze, ist es ja nie null. Ah nein, einfach beim adden 
+        // üerschreiben, oder?
+        
         Link rootLink = new Link();
         rootLink.rel("root").type(LinkMimeType.APPLICATION_JSON);
         if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
