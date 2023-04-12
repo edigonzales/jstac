@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.so.agi.stac.model.Catalog;
+import ch.so.agi.stac.model.Collection;
 import ch.so.agi.stac.model.PublicationType;
 
 public class CatalogTest {
@@ -21,7 +22,17 @@ public class CatalogTest {
                 .description("Geodaten des Kantons Solothurn als STAC");
         
         catalog.setSelfHref("http://localhost:8080/stac/catalog.json");
+//        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/"));
+        
+        
+        Collection collection = new Collection();
+        collection.version("1.0.0").id("mycollection").title("My Collection");
+        catalog.addChild(collection);
+        
         catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/"));
+
+        
+//        collection.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/gaga"));
     }
 
 }
