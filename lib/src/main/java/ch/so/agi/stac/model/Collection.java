@@ -44,4 +44,35 @@ public class Collection extends Catalog {
         this.interval = interval;
         return this;
     }
+    
+    @Override
+    public Collection id(String id) {
+        super.id(id);
+        return this;
+    }
+    
+    @Override
+    public Collection version(String version) {
+        super.version(version);
+        return this;
+    }
+
+    @Override
+    public Collection title(String title) {
+        super.title(title);
+        return this;
+    }
+
+    @Override
+    public Collection description(String description) {
+        super.description(description);
+        return this;
+    }
+    
+    @Override
+    public Collection license(String license) {
+        super.license(license);
+        return this;
+    }
+
 }

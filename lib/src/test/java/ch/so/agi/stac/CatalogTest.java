@@ -43,10 +43,12 @@ public class CatalogTest {
         Interval interval = new Interval().endInterval("2023-04-13");
 
         Collection collection = new Collection();
-        collection.bbox(bbox).interval(interval).version("1.0.0")
+        collection.version("1.0.0")
                 .id("ch.so.afu.abbaustellen")
                 .title("Abbaustellen")
-                .license("https://files.geo.so.ch/nutzungsbedingungen.html");
+                .license("https://files.geo.so.ch/nutzungsbedingungen.html")
+                .bbox(bbox)
+                .interval(interval);
                 
 //        catalogNested.addChild(collection);
         catalog.addChild(collection);

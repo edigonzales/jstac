@@ -27,8 +27,6 @@ public class IntervalSerializer extends StdSerializer<Interval> {
         gen.writeArrayFieldStart("interval");
         gen.writeArray(interval, 0, 2);
         gen.writeEndArray();
-        gen.writeEndObject();
-        
+        gen.writeEndObject();   
     }
-
 }

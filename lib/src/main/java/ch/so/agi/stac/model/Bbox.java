@@ -52,5 +52,4 @@ public class Bbox {
         this.north = north;
         return this;
     }
-
 }
