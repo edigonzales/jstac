@@ -27,6 +27,7 @@ public class CatalogTest {
 //        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/"));
         
         
+        // TODO write test for nested
 //        Catalog catalogNested = new Catalog();
 //        catalogNested.version("1.0.0")
 //                .id("ch.so.geo.stac.nested")
@@ -39,6 +40,7 @@ public class CatalogTest {
                 .east(8.03269288687543)
                 .north(47.50119805032911);       
         
+        // TODO write test
         //Interval interval = new Interval().startInterval("1977-09-23").endInterval("2023-04-13");
         Interval interval = new Interval().endInterval("2023-04-13");
 
