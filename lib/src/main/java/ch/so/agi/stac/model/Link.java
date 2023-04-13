@@ -6,21 +6,48 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.NON_NULL)
 public class Link {
-    @JsonProperty("rel")
     private String rel;
     
-    @JsonProperty("href")
     private String href;
     
     private LinkMimeType type;
     
-    @JsonProperty("title")
     private String title;
     
+    public String getRel() {
+        return rel;
+    }
+
+    public void setRel(String rel) {
+        this.rel = rel;
+    }
+
+    public String getHref() {
+        return href;
+    }
+
+    public void setHref(String href) {
+        this.href = href;
+    }
+
     public String getType() {
         return type.toString();
     }
 
+    public void setType(LinkMimeType type) {
+        this.type = type;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    
+    // fluent api
+    
     public Link rel(String rel) {
         this.rel = rel;
         return this;

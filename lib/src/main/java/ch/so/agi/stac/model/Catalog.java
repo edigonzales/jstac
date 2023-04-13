@@ -7,52 +7,142 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
+
 public class Catalog {   
+    // external
+    
     private String id;
     
+    @JsonProperty("stac_version")
+    private String stacVersion;
+    
+    private String title;
+    
+    private String description;
+    
+    private String license;
+    
+    protected CatalogType type = CatalogType.CATALOG;
+    
+    private Collection<Link> links = new ArrayList<>();
+    
+    // internal
+        
+    @JsonIgnore
+    private Path rootPath;
+    
+    @JsonIgnore
+    private Path parentPath;
+    
+    private Collection<Catalog> children = new ArrayList<>();
+        
+    @JsonIgnore
+    protected String fileName = "catalog.json";
+  
+    private PublicationType publicationType = PublicationType.SELF_CONTAINED;
+    
+    @JsonIgnore
+    private boolean hasParent = false;
+    
+    // getters / setters
+
     public String getId() {
         return id;
     }
 
-    @JsonProperty("stac_version")
-    private String stacVersion;
-    
-    protected CatalogType type = CatalogType.CATALOG;
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    @JsonProperty("title")
-    private String title;
+    public String getStacVersion() {
+        return stacVersion;
+    }
+
+    public void setStacVersion(String stacVersion) {
+        this.stacVersion = stacVersion;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
     
-    @JsonProperty("description")
-    private String description;
-    
-    @JsonProperty("links")
-    private Collection<Link> links = new ArrayList<>();
-    
-    private Collection<Catalog> children = new ArrayList<>();
-    
-    private String selfHref;
-    
-    protected String fileName = "catalog.json";
-    
-    private Path filePath;
-    
-    private boolean hasParent = false;
-    
-    private PublicationType publicationType = PublicationType.SELF_CONTAINED;
-    
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getLicense() {
+        return license;
+    }
+
+    public void setLicense(String license) {
+        this.license = license;
+    }
+
     public String getType() {
         return type.toString();
     }
 
-    public void setSelfHref(String selfHref) {
-        this.selfHref = selfHref;
+    public void setType(CatalogType type) {
+        this.type = type;
+    }
+
+    public Collection<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Collection<Link> links) {
+        this.links = links;
+    }
+        
+    public void setRootPath(Path rootPath) {
+        this.rootPath = rootPath;
     }
     
+    public Path getRootPath() {
+        return rootPath;
+    }
+
+    public void setParentPath(Path parentPath) {
+        this.parentPath = parentPath;
+    }
+    
+    public Path getParentPath() {
+        return parentPath;
+    }
+    
+    public boolean isHasParent() {
+        return hasParent;
+    }
+
+    public void setHasParent(boolean hasParent) {
+        this.hasParent = hasParent;
+    }
+        
+//    public String getFileName() {
+//        return fileName;
+//    }
+//
+//    public void setFileName(String fileName) {
+//        this.fileName = fileName;
+//    }
+    
+    // fluent api
+   
     public Catalog id(String id) {
         this.id = id;
         return this;
@@ -73,6 +163,11 @@ public class Catalog {
         return this;
     }
     
+    public Catalog license(String license) {
+        this.license = license;
+        return this;
+    }
+    
     // TODO nötig?
     public Catalog links(Collection<Link> links) {
         this.links = links;
@@ -80,68 +175,60 @@ public class Catalog {
     }
     
     public<T extends Catalog> void addChild(Catalog child) {
+        child.setHasParent(true);
         children.add(child);
     }
     
-    public void save(PublicationType publicationType, File file) throws StreamWriteException, DatabindException, IOException {
+    public void save(PublicationType publicationType, Path target) throws StreamWriteException, DatabindException, IOException {
         this.publicationType = publicationType;
-        
+
+        Path currentPath = target.toAbsolutePath();
+
         // add self link
         // Wenn der Katalog self-contained ist, gibt es keinen self-link.
-        if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
-            Link selfLink = new Link();
-            selfLink.rel("self").href(selfHref).type(LinkMimeType.APPLICATION_JSON);
-            links.add(selfLink);
+//        if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
+//            Link selfLink = new Link();
+//            selfLink.rel("self").href(selfHref).type(LinkMimeType.APPLICATION_JSON);
+//            links.add(selfLink);
+//            
+//            fileName = selfHref.substring(selfHref.lastIndexOf('/')+1, selfHref.length());
+//        }
+        
+        // Man darf den rootPath nur verändern, wenn es sich um das wirkliche
+        // Root-Element handelt.
+        if (!hasParent) {
+            rootPath = Paths.get(target.toFile().getAbsolutePath(), fileName); // TODO filename ist redundant           
+        }
+        for (Catalog child : children) {
+            child.setRootPath(this.rootPath);
             
-            fileName = selfHref.substring(selfHref.lastIndexOf('/')+1, selfHref.length());
+            Path childTarget = Paths.get(target.toFile().getAbsolutePath()).resolve(Paths.get(child.getId()));
+            if (!childTarget.toFile().exists()) {
+                childTarget.toFile().mkdirs();
+            }
+                        
+            Path relativeParentPath = childTarget.relativize(currentPath.resolve(fileName));
+            child.setParentPath(relativeParentPath);
+            
+            child.save(childTarget);
         }
-               
-        // add root link
-        // TODO: das wird komplizierter wenn vererbt wird. Weniger wegen dem Vererben als eher wegen 
-        // der Kinder.
-        // Die Collection zeigt immer auch auf das root-Element.
-        // Zu welchem Zeitpunkt muss es den Root-Link geben? Wenn erste beim saven des katalogs, alls Kinder
-        // upgedatet werden, ists hier ok.
-        // Muss ich nicht wissen, ob ich Eltern habe? Erst wenn es keine Eltern mehr gibt,
-        // bin ich das wirklich root-Element? Weil Catalogs können wiederum Catalogs als Kinder
-        // haben. Also ist es nicht nur an der Klasse anzuhängen.
         
-        // Vielleicht doch am einfachsten "parent", "root" und ggf. andere als eigenständige
-        // Variablen führen und mein adden des Childs dem Child adden. Das muss dann aber bis zum letzten Kind gehen und
-        // nicht nur das Kind selber (Item, asset?). Item zeigt auch wieder auf root-Katalog.
-        // "root" immer das new File()-Verzeichnis als Default? Wenn es ein File ist (und kein String),
-        // wird der Pfadt (../../etc pp) richtig gehandelt. resp. das Wissen liegt vorg.
-        // Ah: Der PublicationType eines Kindes hat nach dem Adden zum Parent keine Bedeutung mehr, sonst
-        // geht es ja nicht, da Widerspruch möglich.
-        
-        // Root Link nur beim Saven behandeln, wenn er nicht null ist? Weil ich muss ihn ja mindestens
-        // für den root-catalog beim Saven behandeln.
-        
-        // Ah damn it. Wenn ich aber rootlink dfeaultmässig setze, ist es ja nie null. Ah nein, einfach beim adden 
-        // üerschreiben, oder?
-        
-        Link rootLink = new Link();
-        rootLink.rel("root").type(LinkMimeType.APPLICATION_JSON);
-        if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
-            rootLink.href(selfHref);
-        } else {
-            rootLink.href(Paths.get(file.getAbsolutePath(), fileName).toFile().getAbsolutePath());
-        }
+        Link rootLink = new Link().rel("root").href(currentPath.relativize(rootPath).toString()).type(LinkMimeType.APPLICATION_JSON);
         links.add(rootLink);
         
-        for (Catalog child : children) {
-            File childFile = Paths.get("/Users/stefan/tmp/gaga").toFile();
-            child.save(childFile);
+        if (this.parentPath != null) {
+            Link parentLink = new Link().rel("parent").href(this.parentPath.toString()).type(LinkMimeType.APPLICATION_JSON);
+            links.add(parentLink);            
         }
         
         
-        File resultFile = Paths.get(file.getAbsolutePath(), fileName).toFile();
+        File resultFile = Paths.get(target.toFile().getAbsolutePath(), fileName).toFile();
 
-        ObjectMapper objectMapper = new ObjectMapper(); // TODO: Singleton o.ä.?
+        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
         objectMapper.writeValue(resultFile, this);
     }
     
-    public void save(File file) throws StreamWriteException, DatabindException, IOException {
-        this.save(publicationType, file);
+    public void save(Path target) throws StreamWriteException, DatabindException, IOException {
+        this.save(publicationType, target);
     }
 }
