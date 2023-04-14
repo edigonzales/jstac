@@ -48,14 +48,23 @@ public class CatalogTest {
         collection.version("1.0.0")
                 .id("ch.so.afu.abbaustellen")
                 .title("Abbaustellen")
+                .description(
+                        "Die Abbaustellen umfassen die Flächen folgender Objekte: <br/><ul><li>sämtliche grösseren Abbaugebiete (Kiesgruben, Kalksteinbrüche sowie Tongruben), für welche ein Gestaltungsplan vorliegt. Die dargestellten Flächen umfassen jeweils den gesamten Perimeter der genehmigten Gestaltungspläne, und nicht einzelne Abbauetappen.</li><li>Kleinabbaustellen. Es handelt sich üblicherweise um kleinere, gemeindeeigene Mergelgruben, in welchen Material für den Bau und Unterhalt von Wald- und Flurwegen abgebaut wird. Kleinabbaustellen erfordern keinen Gestaltungsplan. Die dargestellten Flächen umfassen hier jeweils den auf Stufe Bau-, bzw. Abbaubewilligung genehmigten Perimeter.</li><li>alle künftigen Erweiterungs- und Ersatzstandorte, welche im kantonalen Richtplan (Kap. E-3.1 bis E-3.4) enthalten sind.</li></ul><br>Die Flächen wurden von verschiedenen Planvorlagen und bestehenden Flächendaten mit unterschiedlichem Massstab digitalisiert, bzw. übernommen.")
                 .license("https://files.geo.so.ch/nutzungsbedingungen.html")
                 .bbox(bbox)
                 .interval(interval);
+        
                 
 //        catalogNested.addChild(collection);
         catalog.addChild(collection);
         
-        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/jstac").toPath());
+//        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/jstac").toPath());
+        
+//        catalog.setSelfHref("http://localhost:8080/stac/");
+//        catalog.save(PublicationType.RELATIVE_PUBLISHED, new File("/Users/stefan/tmp/jstac").toPath());
+
+        catalog.setSelfHref("http://localhost:8080/stac/");
+        catalog.save(PublicationType.ABSOLUTE_PUBLISHED, new File("/Users/stefan/tmp/jstac").toPath());
 
         
         

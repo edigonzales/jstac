@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 
 public class Catalog {   
-    // external
+    // json
     
     private String id;
     
@@ -26,20 +26,21 @@ public class Catalog {
     private String title;
     
     private String description;
-    
-    private String license;
-    
+        
     protected CatalogType type = CatalogType.CATALOG;
     
     private Collection<Link> links = new ArrayList<>();
     
-    // internal
+    // api
         
     @JsonIgnore
-    private Path rootPath;
+    private Path rootFilePath;
     
     @JsonIgnore
     private Path parentPath;
+    
+    @JsonIgnore
+    private String selfHref; // Eher sowas wie rootSelfHref aka baseUrl.
     
     private Collection<Catalog> children = new ArrayList<>();
         
@@ -85,14 +86,6 @@ public class Catalog {
         this.description = description;
     }
 
-    public String getLicense() {
-        return license;
-    }
-
-    public void setLicense(String license) {
-        this.license = license;
-    }
-
     public String getType() {
         return type.toString();
     }
@@ -109,12 +102,12 @@ public class Catalog {
         this.links = links;
     }
         
-    public void setRootPath(Path rootPath) {
-        this.rootPath = rootPath;
+    public void setRootFilePath(Path rootFilePath) {
+        this.rootFilePath = rootFilePath;
     }
     
-    public Path getRootPath() {
-        return rootPath;
+    public Path getRootFilePath() {
+        return rootFilePath;
     }
 
     public void setParentPath(Path parentPath) {
@@ -125,6 +118,22 @@ public class Catalog {
         return parentPath;
     }
     
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+    
+    public String getSelfHref() {
+        return selfHref;
+    }
+
+    public void setSelfHref(String selfHref) {
+        this.selfHref = selfHref;
+    }
+
     public boolean isHasParent() {
         return hasParent;
     }
@@ -132,15 +141,7 @@ public class Catalog {
     public void setHasParent(boolean hasParent) {
         this.hasParent = hasParent;
     }
-        
-//    public String getFileName() {
-//        return fileName;
-//    }
-//
-//    public void setFileName(String fileName) {
-//        this.fileName = fileName;
-//    }
-    
+            
     // fluent api
    
     public Catalog id(String id) {
@@ -162,12 +163,7 @@ public class Catalog {
         this.description = description;
         return this;
     }
-    
-    public Catalog license(String license) {
-        this.license = license;
-        return this;
-    }
-    
+        
     // TODO nötig?
     public Catalog links(Collection<Link> links) {
         this.links = links;
@@ -180,42 +176,82 @@ public class Catalog {
     }
     
     public void save(PublicationType publicationType, Path target) throws StreamWriteException, DatabindException, IOException {
-        this.publicationType = publicationType;
+        this.publicationType = publicationType; // TODO Brauche ich das noch als globale Variable?
 
-        Path currentPath = target.toAbsolutePath();
-
-        // add self link
-        // Wenn der Katalog self-contained ist, gibt es keinen self-link.
-//        if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
-//            Link selfLink = new Link();
-//            selfLink.rel("self").href(selfHref).type(LinkMimeType.APPLICATION_JSON);
-//            links.add(selfLink);
-//            
-//            fileName = selfHref.substring(selfHref.lastIndexOf('/')+1, selfHref.length());
-//        }
-        
         // Man darf den rootPath nur verändern, wenn es sich um das wirkliche
         // Root-Element handelt.
         if (!hasParent) {
-            rootPath = Paths.get(target.toFile().getAbsolutePath(), fileName); // TODO filename ist redundant           
+            rootFilePath = Paths.get(target.toFile().getAbsolutePath(), fileName);           
         }
+
+        Path currentDirectoryPath = target.toAbsolutePath();
+                
+        Path rootDirectoryPath = rootFilePath.getParent();
+        Path currentFilePath = currentDirectoryPath.resolve(fileName).toAbsolutePath();
+        String currentHref = selfHref + rootDirectoryPath.relativize(currentFilePath).toString();        
+//        System.out.println("currentHref: " + currentHref);
+
+        
+        // self relation
+        // Wenn der Katalog self-contained ist, gibt es keinen self-link.
+        if (!this.publicationType.equals(PublicationType.SELF_CONTAINED)) {
+            Link selfLink = new Link();
+
+            if (!hasParent && publicationType.equals(PublicationType.RELATIVE_PUBLISHED)) {
+                System.out.println("relativ. self muss absolut sein aber nur bei root element vorhanden.");
+                selfLink.rel("self").href(selfHref + fileName).type(LinkMimeType.APPLICATION_JSON); 
+
+            } else {
+                System.out.println("absolut. self muss immer absolut vorhanden sein.");
+                
+                // TODO Das stimmt noch nicht. Muss eben ander sein für Kinder.
+                //selfLink.rel("self").href(selfHref + fileName).type(LinkMimeType.APPLICATION_JSON); 
+
+
+            }
+            
+            links.add(selfLink);
+        }
+                
         for (Catalog child : children) {
-            child.setRootPath(this.rootPath);
+            child.setRootFilePath(rootFilePath);
             
             Path childTarget = Paths.get(target.toFile().getAbsolutePath()).resolve(Paths.get(child.getId()));
+            
+//            System.out.println("childTarget: " + childTarget);
+            
             if (!childTarget.toFile().exists()) {
                 childTarget.toFile().mkdirs();
             }
-                        
-            Path relativeParentPath = childTarget.relativize(currentPath.resolve(fileName));
+             
+            
+            //TODO Name und sowieso anders lösen.
+            Path relativeParentPath = childTarget.relativize(currentDirectoryPath.resolve(fileName));
             child.setParentPath(relativeParentPath);
             
-            child.save(childTarget);
+            child.setSelfHref(selfHref);
+            
+            child.save(this.publicationType,  childTarget);
+            
+            Path relativeChildPath = currentDirectoryPath.relativize(childTarget).resolve(child.getFileName());            
+            Link childLink = new Link();
+            childLink.rel("child").href(relativeChildPath.toString()).type(LinkMimeType.APPLICATION_JSON).title(child.getTitle());
+            links.add(childLink);
         }
         
-        Link rootLink = new Link().rel("root").href(currentPath.relativize(rootPath).toString()).type(LinkMimeType.APPLICATION_JSON);
+        // root relation
+        // Nur absolut hat absolute href. 
+        String rootLinkHref;
+        if (!this.publicationType.equals(PublicationType.SELF_CONTAINED)) {
+            rootLinkHref = selfHref + rootDirectoryPath.relativize(currentFilePath).toString();
+        } else {
+            rootLinkHref = currentDirectoryPath.relativize(rootFilePath).toString();
+        } 
+        
+        Link rootLink = new Link().rel("root").href(rootLinkHref).type(LinkMimeType.APPLICATION_JSON);
         links.add(rootLink);
         
+        // parent relation
         if (this.parentPath != null) {
             Link parentLink = new Link().rel("parent").href(this.parentPath.toString()).type(LinkMimeType.APPLICATION_JSON);
             links.add(parentLink);            
@@ -228,7 +264,27 @@ public class Catalog {
         objectMapper.writeValue(resultFile, this);
     }
     
-    public void save(Path target) throws StreamWriteException, DatabindException, IOException {
-        this.save(publicationType, target);
-    }
+//    public void save(Path target) throws StreamWriteException, DatabindException, IOException {
+//        this.save(this.publicationType, target);
+//    }
+    
+//    /*
+//     * Wandelt den (lokalen) Dateipfad in eine absolute Url um.
+//     * 
+//     * currentPath: Absoluter Pfad, der umgewandelt werden muss.
+//     */
+//    private String getAbsoluteHref(Path rootDirectoryPath, Path currentFilePath, String baseUrl) {
+//        System.out.println("rootDirectoryPath: " + rootDirectoryPath);
+//        System.out.println("currentFilePath: " + currentFilePath);
+//        System.out.println("baseUrl: " + baseUrl);
+//        
+//        Path relativePath = rootDirectoryPath.relativize(currentFilePath);
+//        
+//        
+//        
+//        System.out.println(rootDirectoryPath.relativize(currentFilePath));
+//        
+//        
+//        return null;
+//    }
 }

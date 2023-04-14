@@ -11,12 +11,22 @@ public class Collection extends Catalog {
         super.fileName = "collection.json";
     }
     
+    private String license;
+    
     @JsonProperty("extent")
     private Bbox bbox;
     
     @JsonProperty("temporal")
     private Interval interval;
     
+    public String getLicense() {
+        return license;
+    }
+
+    public void setLicense(String license) {
+        this.license = license;
+    }
+
     public Bbox getBbox() {
         return bbox;
     }
@@ -45,6 +55,11 @@ public class Collection extends Catalog {
         return this;
     }
     
+    public Collection license(String license) {
+        this.license = license;
+        return this;
+    }
+    
     @Override
     public Collection id(String id) {
         super.id(id);
@@ -68,11 +83,4 @@ public class Collection extends Catalog {
         super.description(description);
         return this;
     }
-    
-    @Override
-    public Collection license(String license) {
-        super.license(license);
-        return this;
-    }
-
 }
