@@ -253,7 +253,7 @@ public class Catalog {
             rootFilePath = Paths.get(target.toFile().getAbsolutePath(), fileName);           
         }
         
-        Path rootDirectoryPath = rootFilePath.getParent();
+        Path rootDirectoryPath = rootFilePath.getParent(); // TODO entspricht outputDirectoryPath
         
         Path currentDirectoryPath = target.toAbsolutePath();
         Path currentFilePath = currentDirectoryPath.resolve(fileName).toAbsolutePath();
@@ -291,7 +291,7 @@ public class Catalog {
             
             // parent relation
             // absolut: Entspricht der self relation des Elternteils. Also von currentHref.
-            // self und relation: Lokales (relatives) Verzeichnis des Elternteils als Vergleich Kind-Verzeichnis vs Elternteil-Verzeichnis.
+            // self und relativ: Lokales (relatives) Verzeichnis des Elternteils als Vergleich Kind-Verzeichnis vs Elternteil-Verzeichnis.
             Link parentLink = getParentLink(rootSelfHref, publicationType, rootDirectoryPath, currentFilePath, childTarget);
             child.getLinks().add(parentLink);
 
@@ -303,7 +303,8 @@ public class Catalog {
         }
                 
         // root relation
-        // Nur absolut hat absolute href. 
+        // absolut: Absolute Href.
+        // self und relativ: Lokales (relatives) Href.
         Link rootLink = getRootLink(rootSelfHref, publicationType, currentDirectoryPath);
         links.add(rootLink);
 
