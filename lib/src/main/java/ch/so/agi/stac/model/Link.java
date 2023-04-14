@@ -34,8 +34,8 @@ public class Link {
         return type.toString();
     }
 
-    public void setType(LinkMimeType type) {
-        this.type = type;
+    public void setType(String type) {
+        this.type = LinkMimeType.fromString(type);
     }
 
     public String getTitle() {

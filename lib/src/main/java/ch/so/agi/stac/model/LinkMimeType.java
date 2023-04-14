@@ -13,9 +13,17 @@ public enum LinkMimeType {
         return value;
     }
 
+    public static LinkMimeType fromString(String text) {
+        for (LinkMimeType l : LinkMimeType.values()) {
+            if (l.value.equalsIgnoreCase(text)) {
+                return l;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return String.valueOf(value);
     }
-
 }

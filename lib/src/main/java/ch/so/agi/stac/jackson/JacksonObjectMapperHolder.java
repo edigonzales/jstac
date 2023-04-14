@@ -28,12 +28,14 @@ public class JacksonObjectMapperHolder {
         {
             SimpleModule module = new SimpleModule();
             module.addSerializer(Bbox.class, new BboxSerializer());
+            module.addDeserializer(Bbox.class, new BBoxDeserializer());
             objectMapper.registerModule(module);
         }
         
         {
             SimpleModule module = new SimpleModule();
             module.addSerializer(Interval.class, new IntervalSerializer());
+            module.addDeserializer(Interval.class, new IntervalDeserializer());
             objectMapper.registerModule(module);
         }
         
