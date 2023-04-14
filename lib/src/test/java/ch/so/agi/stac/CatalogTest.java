@@ -81,7 +81,7 @@ public class CatalogTest {
         
         double westlimit = 7.34;
         String endInterval = "2023-04-13";
-        String selfHref = "http://localhost:8080/stac/";
+        String rootSelfHref = "http://localhost:8080/stac/";
 
         // Run
         Bbox bbox = new Bbox().west(westlimit)
@@ -101,7 +101,7 @@ public class CatalogTest {
                 .bbox(bbox)
                 .interval(interval);
 
-        collection.setSelfHref(selfHref);
+        collection.setRootSelfHref(rootSelfHref);
         collection.save(PublicationType.ABSOLUTE_PUBLISHED, outputDirectory);
 
         // Validate
@@ -166,7 +166,7 @@ public class CatalogTest {
                 .interval(interval);
         catalog.addChild(collection);
 
-        catalog.setSelfHref(selfHref);
+        catalog.setRootSelfHref(selfHref);
         catalog.save(PublicationType.ABSOLUTE_PUBLISHED, outputDirectory);
         
         // Validate
@@ -193,7 +193,6 @@ public class CatalogTest {
         assertTrue(childHref!=null);
         
         String childFilePathElement = childHref.replace(selfHref, "");
-        System.out.println(childFilePathElement);
         
         File childFile = Paths.get(outputDirectory.toFile().getAbsolutePath(), childFilePathElement).toFile();
         Collection resultCollection = objectMapper.readValue(childFile, Collection.class);
@@ -218,56 +217,93 @@ public class CatalogTest {
         assertTrue(hasParent);
     }
 
-    //@Test
+    @Test
     public void dummy() throws Exception {
+
+        // FIXME
+        // Andere Varianten, denn das Problem ist das Updaten der Links. Nun gibt 
+        // es root 2x. Wird noch herausfordernder bei items und so.
+        // - Entweder gar nicht Lesen von File. Sondern bei Bedarf immer flushen.
+        // - Wenn ich doch von File importierne will, braucht es eine zusätzliche
+        // upsert-Logik der Links.
+        
+        
+        
+        
+        
+        
+        
+        
+        // Catalog noch nicht speichern. Zuerst müssen die Collection persistiert werden, 
+        // um sie anschliessend wieder lesen und sie hinzufügen zu können.
         Catalog catalog = new Catalog();
         catalog.version("1.0.0")
                 .id("ch.so.geo.stac")
                 .title("Geodaten des Kantons Solothurn")
-                .description("Geodaten des Kantons Solothurn als STAC");
+                .description("Geodaten des Kantons Solothurn als STAC")
+                .selfHref("http://localhost:8080/stac/")
+                .publicationType(PublicationType.ABSOLUTE_PUBLISHED)
+                .outputDirectory(new File("/Users/stefan/tmp/jstac/normalizedcatalog").toPath());
         
-//        catalog.setSelfHref("http://localhost:8080/stac/catalog.json");
-//        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/"));
-        
-        
-        // TODO write test for nested
-//        Catalog catalogNested = new Catalog();
-//        catalogNested.version("1.0.0")
-//                .id("ch.so.geo.stac.nested")
-//                .title("Nested Geodaten des Kantons Solothurn")
-//                .description("Nested Geodaten des Kantons Solothurn als STAC");
-//        catalog.addChild(catalogNested);
-                
         Bbox bbox = new Bbox().west(7.340693492284002)
                 .south(47.074299169536175)
                 .east(8.03269288687543)
                 .north(47.50119805032911);       
         
-        // TODO write test
-        //Interval interval = new Interval().startInterval("1977-09-23").endInterval("2023-04-13");
         Interval interval = new Interval().endInterval("2023-04-13");
 
-        Collection collection = new Collection();
-        collection.version("1.0.0")
-                .id("ch.so.afu.abbaustellen")
-                .title("Abbaustellen")
-                .description(
-                        "Die Abbaustellen umfassen die Flächen folgender Objekte: <br/><ul><li>sämtliche grösseren Abbaugebiete (Kiesgruben, Kalksteinbrüche sowie Tongruben), für welche ein Gestaltungsplan vorliegt. Die dargestellten Flächen umfassen jeweils den gesamten Perimeter der genehmigten Gestaltungspläne, und nicht einzelne Abbauetappen.</li><li>Kleinabbaustellen. Es handelt sich üblicherweise um kleinere, gemeindeeigene Mergelgruben, in welchen Material für den Bau und Unterhalt von Wald- und Flurwegen abgebaut wird. Kleinabbaustellen erfordern keinen Gestaltungsplan. Die dargestellten Flächen umfassen hier jeweils den auf Stufe Bau-, bzw. Abbaubewilligung genehmigten Perimeter.</li><li>alle künftigen Erweiterungs- und Ersatzstandorte, welche im kantonalen Richtplan (Kap. E-3.1 bis E-3.4) enthalten sind.</li></ul><br>Die Flächen wurden von verschiedenen Planvorlagen und bestehenden Flächendaten mit unterschiedlichem Massstab digitalisiert, bzw. übernommen.")
-                .license("https://files.geo.so.ch/nutzungsbedingungen.html")
-                .bbox(bbox)
-                .interval(interval);
+        {
+            Path outputDirectoryPath = Paths.get("/Users/stefan/tmp/jstac/selfcontainedcollection_no1/");
+            Path resultFilePath = outputDirectoryPath.resolve("collection.json");
+
+            Collection collection = new Collection();
+            collection.version("1.0.0")
+                    .id("ch.so.afu.abbaustellen")
+                    .title("Abbaustellen")
+                    .description(
+                            "Die Abbaustellen umfassen die Flächen folgender Objekte: <br/><ul><li>sämtliche grösseren Abbaugebiete (Kiesgruben, Kalksteinbrüche sowie Tongruben), für welche ein Gestaltungsplan vorliegt. Die dargestellten Flächen umfassen jeweils den gesamten Perimeter der genehmigten Gestaltungspläne, und nicht einzelne Abbauetappen.</li><li>Kleinabbaustellen. Es handelt sich üblicherweise um kleinere, gemeindeeigene Mergelgruben, in welchen Material für den Bau und Unterhalt von Wald- und Flurwegen abgebaut wird. Kleinabbaustellen erfordern keinen Gestaltungsplan. Die dargestellten Flächen umfassen hier jeweils den auf Stufe Bau-, bzw. Abbaubewilligung genehmigten Perimeter.</li><li>alle künftigen Erweiterungs- und Ersatzstandorte, welche im kantonalen Richtplan (Kap. E-3.1 bis E-3.4) enthalten sind.</li></ul><br>Die Flächen wurden von verschiedenen Planvorlagen und bestehenden Flächendaten mit unterschiedlichem Massstab digitalisiert, bzw. übernommen.")
+                    .license("https://files.geo.so.ch/nutzungsbedingungen.html")
+                    .bbox(bbox)
+                    .interval(interval);
+                    
+            collection.save(PublicationType.SELF_CONTAINED, outputDirectoryPath);   
+            
+            Collection collectionFromFile = Collection.readFromFile(resultFilePath.toFile());
+            catalog.addChild(collectionFromFile);
+            catalog.flushChildren();
+        }
+
+        Path outputDirectoryPath = Paths.get("/Users/stefan/tmp/jstac/selfcontainedcollection_no2/");
+        Path resultFilePath = outputDirectoryPath.resolve("collection.json");
+        {
+            Collection collection = new Collection();
+            collection.version("1.0.0")
+                    .id("ch.so.agi.av.administrative_einteilung")
+                    .title("Administrative Einteilung AV und Grundbuch")
+                    .description(
+                            "Administrativen Einteilungen der amtlichen Vermessung und des Grundbuchs.")
+                    .license("https://files.geo.so.ch/nutzungsbedingungen.html")
+                    .bbox(bbox)
+                    .interval(interval);
+                    
+            collection.save(PublicationType.SELF_CONTAINED, outputDirectoryPath);     
+            
+            Collection collectionFromFile = Collection.readFromFile(resultFilePath.toFile());
+            catalog.addChild(collectionFromFile);
+            catalog.flushChildren();
+        }
         
-                
-//        catalogNested.addChild(collection);
-        catalog.addChild(collection);
         
-        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/jstac").toPath());
+        
+//        catalog.save(PublicationType.SELF_CONTAINED, new File("/Users/stefan/tmp/jstac/normalizedcatalog").toPath());
         
 //        catalog.setSelfHref("http://localhost:8080/stac/");
 //        catalog.save(PublicationType.RELATIVE_PUBLISHED, new File("/Users/stefan/tmp/jstac").toPath());
 
-//        catalog.setSelfHref("http://localhost:8080/stac/");
-//        catalog.save(PublicationType.ABSOLUTE_PUBLISHED, new File("/Users/stefan/tmp/jstac").toPath());
+//        catalog.addFromFile(resultFilePathOne.toFile());
+//        catalog.addFromFile(resultFilePathTwo.toFile());
+        
+        catalog.save(PublicationType.ABSOLUTE_PUBLISHED, new File("/Users/stefan/tmp/jstac/normalizedcatalog").toPath());
 
         
         

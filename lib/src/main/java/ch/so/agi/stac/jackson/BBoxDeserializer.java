@@ -27,9 +27,9 @@ public class BBoxDeserializer extends StdDeserializer<Bbox> {
         ArrayNode bboxArrayNode = (ArrayNode) node.get("spatial").get("bbox");
         
         double west = ((ArrayNode) bboxArrayNode.get(0)).get(0).asDouble();
-        double south = ((ArrayNode) bboxArrayNode.get(0)).get(0).asDouble();
-        double east = ((ArrayNode) bboxArrayNode.get(0)).get(0).asDouble();
-        double north = ((ArrayNode) bboxArrayNode.get(0)).get(0).asDouble();
+        double south = ((ArrayNode) bboxArrayNode.get(0)).get(1).asDouble();
+        double east = ((ArrayNode) bboxArrayNode.get(0)).get(2).asDouble();
+        double north = ((ArrayNode) bboxArrayNode.get(0)).get(3).asDouble();
         
         return new Bbox().west(west).south(south).east(east).north(north);
     }

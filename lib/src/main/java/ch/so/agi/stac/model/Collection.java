@@ -1,8 +1,16 @@
 package ch.so.agi.stac.model;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.so.agi.stac.jackson.Interval;
+import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 
 public class Collection extends Catalog {
     
@@ -41,6 +49,16 @@ public class Collection extends Catalog {
 
     public void setInterval(Interval interval) {
         this.interval = interval;
+    }
+    
+    public static Collection readFromFile(File collectionFile) throws IOException {
+        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
+        Collection collection = objectMapper.readValue(collectionFile, Collection.class);
+
+        // TODO items... müssen eruiert werden (rel=item). Theoretisch ist ja auch wieder rel=child (= collection?)
+        // möglich. Dokumentieren, dass das mal out-of-scope ist.
+        
+        return collection;
     }
     
     // fluent api
@@ -83,4 +101,24 @@ public class Collection extends Catalog {
         super.description(description);
         return this;
     }
+    
+    @Override
+    public Collection publicationType(PublicationType publicationType) {
+        super.publicationType(publicationType);
+        return this;
+    }
+    
+    @Override
+    public Collection selfHref(String selfHref) {
+        super.selfHref(selfHref);
+        return this;
+    }
+    
+    @Override
+    public Collection outputDirectory(Path outputDirectory) {
+        super.outputDirectory(outputDirectory);
+        return this;
+    } 
+
+
 }
