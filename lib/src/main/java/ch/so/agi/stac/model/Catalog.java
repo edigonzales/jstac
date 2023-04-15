@@ -46,6 +46,12 @@ public class Catalog {
     // Ah vielleicht doch sinnvoll, weil man exportieren kann (immer).
     
     
+    // Mit einem Item durchspielen, weil nochmals Komplexität.
+    // Ohne Links/Href, nur mit outputDirectoryPath (resp. file). Wenn dieser korrekt funktioniert, kann ich alles
+    // von dort ableiten. Falls dieser nicht gesetzt wird (z.B. beim Item oder Collection, die geadded wird), muss
+    // dieser Pfad angenommen werden(?) oder spätestens beim Adden berechnet werden. Wenn das Mutterelement keinen hat,
+    // wird einfach new File()-Dir angenommen.
+    
     
     public Catalog (CatalogBuilder builder) {
         this.type = builder.type;
