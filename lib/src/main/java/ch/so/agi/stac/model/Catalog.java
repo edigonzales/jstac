@@ -50,6 +50,8 @@ public class Catalog {
     
     private Map<String,Catalog> children = new HashMap<>();
             
+    private List<Item> items = new ArrayList<>();
+
     @JsonIgnore
     protected String fileName = "catalog.json";
       
@@ -197,6 +199,16 @@ public class Catalog {
         children.put(child.getId(), child);
     }
     
+    public void addItem(Item item) {
+        item.setCollection(this.getId());
+        item.setParentLink(null);
+        
+        
+        items.add(item);
+    }
+
+    
+    
         
     private Link getSelfLink(String selfHref, PublicationType publicationType, Path rootDirectoryPath, Path currentFilePath) {
         if (!publicationType.equals(PublicationType.SELF_CONTAINED)) {
@@ -285,6 +297,12 @@ public class Catalog {
         
         // Die Kinder mit zusätzlichen Informationen abfüllen und speichern.
         saveChildren(rootDirectoryPath, currentFilePath, currentDirectoryPath);
+        
+        if (this instanceof Collection) {
+            for (Item item : items) {
+                
+            }            
+        }
                 
         // root relation
         // absolut: Absolute Href.

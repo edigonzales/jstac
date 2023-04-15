@@ -3,6 +3,8 @@ package ch.so.agi.stac.model;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -26,7 +28,7 @@ public class Collection extends Catalog {
     
     @JsonProperty("temporal")
     private Interval interval;
-    
+        
     public String getLicense() {
         return license;
     }
@@ -50,6 +52,7 @@ public class Collection extends Catalog {
     public void setInterval(Interval interval) {
         this.interval = interval;
     }
+    
     
     public static Collection readFromFile(File collectionFile) throws IOException {
         ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
