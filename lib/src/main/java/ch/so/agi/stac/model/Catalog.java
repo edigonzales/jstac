@@ -36,15 +36,14 @@ public class Catalog {
     private List<Link> links = new ArrayList<>();
     
     // api
+    @JsonIgnore
     private PublicationType publicationType;    
     
-    // TODO eine der beiden ist überflüssig hier.
+    @JsonIgnore
+    private Path outputDirectoryPath; // z.B. "/opt/stac/". Dynamisch, d.h. ändert sich in den Kindern.
     
     @JsonIgnore
-    private Path outputDirectoryPath; // z.B. "/opt/stac/"
-    
-    @JsonIgnore
-    private Path rootFilePath; // z.B. "/opt/stac/catalog.json"
+    private Path rootFilePath; // z.B. "/opt/stac/catalog.json". Statisch, d.h. wird im Root-Katalog gesetzt und ist immer gleich für die Kinder.
         
     @JsonIgnore
     private String rootSelfHref; // Kann auch als Basis-Url des Rootelementes betrachtet werden.
@@ -108,7 +107,7 @@ public class Catalog {
     }
         
     public void setRootFilePath(Path rootFilePath) {
-        this.rootFilePath = rootFilePath;
+        this.rootFilePath = rootFilePath.toAbsolutePath();
     }
     
     public Path getRootFilePath() {
@@ -121,6 +120,14 @@ public class Catalog {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+    
+    public Path getOutputDirectoryPath() {
+        return outputDirectoryPath;
+    }
+
+    public void setOutputDirectoryPath(Path outputDirectoryPath) {
+        this.outputDirectoryPath = outputDirectoryPath.toAbsolutePath();
     }
     
     public String getRootSelfHref() {
@@ -138,7 +145,15 @@ public class Catalog {
     public void setHasParent(boolean hasParent) {
         this.hasParent = hasParent;
     }
-            
+                
+    public PublicationType getPublicationType() {
+        return publicationType;
+    }
+
+    public void setPublicationType(PublicationType publicationType) {
+        this.publicationType = publicationType;
+    }
+
     // fluent api
    
     public Catalog id(String id) {
@@ -172,17 +187,12 @@ public class Catalog {
     }
     
     public Catalog outputDirectory(Path outputDirectory) {
-        this.outputDirectoryPath = outputDirectory;
+        this.outputDirectoryPath = outputDirectory.toAbsolutePath();
         return this;
     } 
         
-    // TODO nötig?
-    public Catalog links(List<Link> links) {
-        this.links = links;
-        return this;
-    }
     
-    public<T extends Catalog> void addChild(Catalog child) {
+    public void addChild(Catalog child) {
         child.setHasParent(true);
         children.put(child.getId(), child);
     }
@@ -233,7 +243,7 @@ public class Catalog {
         String rootLinkHref;
         if (publicationType.equals(PublicationType.ABSOLUTE_PUBLISHED)) {
             rootLinkHref = selfHref + rootFilePath.toFile().getName();
-        } else {
+        } else {  
             rootLinkHref = currentDirectoryPath.relativize(rootFilePath).toString();
         } 
         
@@ -241,21 +251,25 @@ public class Catalog {
         return rootLink;
     }
 
-    // TODO publicationtype und target braucht es nicht mehr. Die werden zu Beginn
-    // gesetzt.
-    public void save(PublicationType publicationType, Path target) throws IOException {
-        File resultFile = Paths.get(target.toFile().getAbsolutePath(), fileName).toFile();
+    // TODO
+    // Vielleicht ist es sinnvoller die Kinder nachzuführen resp. mit den benötigten Infos abzufüllen
+    // zum Zeitpunkt, wenn man sie hinzufügt. 
+    // Zuerst auseinanderbeinlen welche Info man zu welchem Zeitpunkt braucht und welche Info statisch
+    // oder dynamisch ist.
+
+    public void save() throws IOException {
+        File resultFile = Paths.get(outputDirectoryPath.toFile().getAbsolutePath(), fileName).toFile();
 
         // Der rootFilePath (z.B. /opt/stac/catalog.json) als Root-Catalog/-Collection
-        // wird nur einmal gesetzt. Nämlich wenn es sich um den Root-Catalog/-Collection
-        // handelt. Er ist für jedes weitere Element identisch.
+        // wird nur einmal gesetzt. Nämlich wenn es sich um den/die Root-Catalog/-Collection
+        // handelt. Er ist für jedes folgende Kind identisch.
         if (!hasParent) {
-            rootFilePath = Paths.get(target.toFile().getAbsolutePath(), fileName);           
+            rootFilePath = Paths.get(outputDirectoryPath.toFile().getAbsolutePath(), fileName);           
         }
         
-        Path rootDirectoryPath = rootFilePath.getParent(); // TODO entspricht outputDirectoryPath
+        Path rootDirectoryPath = rootFilePath.getParent();
         
-        Path currentDirectoryPath = target.toAbsolutePath();
+        Path currentDirectoryPath = outputDirectoryPath.toAbsolutePath();
         Path currentFilePath = currentDirectoryPath.resolve(fileName).toAbsolutePath();
                 
         // self relation
@@ -268,101 +282,71 @@ public class Catalog {
         if (selfLink != null) {
             links.add(selfLink);
         }
+        
+        // Die Kinder mit zusätzlichen Informationen abfüllen und speichern.
+        saveChildren(rootDirectoryPath, currentFilePath, currentDirectoryPath);
                 
+        // root relation
+        // absolut: Absolute Href.
+        // self und relativ: Lokales (relatives) Href.
+        Link rootLink = getRootLink(rootSelfHref, publicationType, currentDirectoryPath);
+        links.add(rootLink);    
+        
+        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
+        objectMapper.writeValue(resultFile, this);            
+    }     
+    
+    public void flushChildren() throws IOException {
+        if (!hasParent) {
+            rootFilePath = Paths.get(outputDirectoryPath.toFile().getAbsolutePath(), fileName);            
+        }
+        Path currentDirectoryPath = outputDirectoryPath.toAbsolutePath();
+
+        saveChildren(outputDirectoryPath, rootFilePath, currentDirectoryPath);
+    }
+
+    private void saveChildren(Path rootDirectoryPath, Path currentFilePath, Path currentDirectoryPath) throws IOException  {
+        List<String> flushedCatalogs = new ArrayList<>();
+
         for (Map.Entry<String, Catalog> entry : children.entrySet()) {
+            String key = entry.getKey();
+            flushedCatalogs.add(key);
+
             Catalog child = entry.getValue();
 
-            // Der Kind-Katalog/-Collection muss mit Informationen angereichtert werden,
+            // Der/die Kind-Katalog/-Collection muss mit Informationen angereichtert werden,
             // die man beim Elternteil (also hier) kennt. Z.B. die Basis-Url oder
             // der Speicherpfad des Root-Elements (der benötigt wird für die Hrefs zu 
             // eruieren). Vor allem auch der Parent-Link ist hier bekannt, da das
             // Kind sonst nicht verküpft ist. Es ist im Code unidirektional: Elternteil kennt
             // Kind. Kind kennt Elternteil nicht.
             
+            child.setPublicationType(publicationType);
             child.setRootFilePath(rootFilePath); 
             child.setRootSelfHref(rootSelfHref); 
+
+            Path childOutputDirectoryPath = Paths.get(outputDirectoryPath.toFile().getAbsolutePath()).resolve(Paths.get(child.getId()));
+            child.setOutputDirectoryPath(childOutputDirectoryPath);
             
-            // TODO rename to childOutputDirectoryPath
-            Path childTarget = Paths.get(target.toFile().getAbsolutePath()).resolve(Paths.get(child.getId()));
-                        
-            if (!childTarget.toFile().exists()) {
-                childTarget.toFile().mkdirs();
+            if (!childOutputDirectoryPath.toFile().exists()) {
+                childOutputDirectoryPath.toFile().mkdirs();
             }
             
             // parent relation
             // absolut: Entspricht der self relation des Elternteils. Also von currentHref.
             // self und relativ: Lokales (relatives) Verzeichnis des Elternteils als Vergleich Kind-Verzeichnis vs Elternteil-Verzeichnis.
-            Link parentLink = getParentLink(rootSelfHref, publicationType, rootDirectoryPath, currentFilePath, childTarget);
+            Link parentLink = getParentLink(rootSelfHref, publicationType, rootDirectoryPath, currentFilePath, childOutputDirectoryPath);
             child.getLinks().add(parentLink);
 
-            child.save(publicationType,  childTarget);
+            child.save();
             
             // child relation
-            Link childLink = getChildLink(child, rootSelfHref, publicationType, rootDirectoryPath, currentDirectoryPath, childTarget);
+            Link childLink = getChildLink(child, rootSelfHref, publicationType, rootDirectoryPath, currentDirectoryPath, childOutputDirectoryPath);
             links.add(childLink);
-        }
-                
-        // root relation
-        // absolut: Absolute Href.
-        // self und relativ: Lokales (relatives) Href.
-        Link rootLink = getRootLink(rootSelfHref, publicationType, currentDirectoryPath);
-        links.add(rootLink);
-
-        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
-        objectMapper.writeValue(resultFile, this);            
-    }     
-    
-    // TODO Wahrscheinlich kann man das noch zusammenlegen mit save. Da Pub-Typ und Speicherort vorgängig bekannt
-    // sind. Das Entfernen der Kinder ist sicher unterschiedlich. 
-    
-    // Leichte (?) Redundanz beim Speicherort in den Variablen.
-    
-    public void flushChildren() throws IOException {
-        if (!hasParent) {
-            rootFilePath = Paths.get(outputDirectoryPath.toFile().getAbsolutePath(), fileName);           
-        }
-
-        Path rootDirectoryPath = rootFilePath.getParent();
-        
-        Path currentDirectoryPath = outputDirectoryPath.toAbsolutePath();
-        Path currentFilePath = currentDirectoryPath.resolve(fileName).toAbsolutePath();
-
-        List<String> flushedCatalogs = new ArrayList<>();
-        for (Map.Entry<String, Catalog> entry : children.entrySet()) {
-            String key = entry.getKey();
-            flushedCatalogs.add(key);
-            
-            Catalog child = entry.getValue();
-            
-            child.getLinks().removeAll(child.getLinks());
-            
-            child.setRootFilePath(rootFilePath); 
-            child.setRootSelfHref(rootSelfHref);
-            
-            Path childTarget = Paths.get(outputDirectoryPath.toFile().getAbsolutePath()).resolve(Paths.get(child.getId()));
-                        
-            if (!childTarget.toFile().exists()) {
-                childTarget.toFile().mkdirs();
-            }
-            
-            // parent relation
-            // absolut: Entspricht der self relation des Elternteils. Also von currentHref.
-            // self und relation: Lokales (relatives) Verzeichnis des Elternteils als Vergleich Kind-Verzeichnis vs Elternteil-Verzeichnis.
-            Link parentLink = getParentLink(rootSelfHref, publicationType, rootDirectoryPath, currentFilePath, childTarget);
-            child.getLinks().add(parentLink);
-
-            child.save(publicationType,  childTarget);
-            
-            // child relation
-            Link childLink = getChildLink(child, rootSelfHref, publicationType, rootDirectoryPath, currentDirectoryPath, childTarget);
-            links.add(childLink);            
         }
         
         for (String id : flushedCatalogs) {
-          System.out.println(children.size());
             children.remove(id);
-          System.out.println(children.size());
         }
     }
-
 }
