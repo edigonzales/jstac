@@ -11,13 +11,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import ch.so.agi.stac.model.Bbox;
 
-public class BBoxDeserializer extends StdDeserializer<Bbox> {
+public class BboxDeserializer extends StdDeserializer<Bbox> {
 
-    public BBoxDeserializer() { 
+    public BboxDeserializer() { 
         this(null); 
     } 
 
-    public BBoxDeserializer(Class<?> vc) { 
+    public BboxDeserializer(Class<?> vc) { 
         super(vc); 
     }
 

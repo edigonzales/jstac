@@ -28,7 +28,7 @@ public class JacksonObjectMapperHolder {
         {
             SimpleModule module = new SimpleModule();
             module.addSerializer(Bbox.class, new BboxSerializer());
-            module.addDeserializer(Bbox.class, new BBoxDeserializer());
+            module.addDeserializer(Bbox.class, new BboxDeserializer());
             objectMapper.registerModule(module);
         }
         

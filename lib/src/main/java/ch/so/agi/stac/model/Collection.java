@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.so.agi.stac.jackson.Interval;
 import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 
-public class Collection extends Catalog {
+public class Collection extends Catalog_V1 {
     
     public Collection() {
         super.type = CatalogType.COLLECTION;
