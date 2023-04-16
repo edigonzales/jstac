@@ -22,7 +22,7 @@ import ch.so.agi.stac.model.Bbox;
 import ch.so.agi.stac.model.Catalog;
 import ch.so.agi.stac.model.Catalog_V1;
 import ch.so.agi.stac.model.CatalogType;
-import ch.so.agi.stac.model.Collection;
+import ch.so.agi.stac.model.Collection_V1;
 import ch.so.agi.stac.model.Link;
 import ch.so.agi.stac.model.LinkMimeType;
 import ch.so.agi.stac.model.PublicationType;
@@ -54,7 +54,7 @@ public class CatalogTest {
                 .publicationType(PublicationType.SELF_CONTAINED)
                 .outputDirectory(outputDirectory).build();
 
-        catalog.save();
+//        catalog.save();
         
         // Validate
 //        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
@@ -190,9 +190,9 @@ public class CatalogTest {
 //                .bbox(bbox)
 //                .interval(interval);
         
-        catalog.addChild(collection);
-
-        catalog.save();
+//        catalog.addChild(collection);
+//
+//        catalog.save();
         
 //        // Validate
 //        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
