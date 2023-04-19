@@ -17,6 +17,19 @@ public class Link {
     private String targetHref;
     private STACObject targetObject;
     
+    public Link(LinkBuilder builder) {
+        this.rel = builder.rel;
+        this.target = builder.target;
+        this.mediaType = builder.mediaType;
+        this.title = builder.title;
+        
+        if (this.target instanceof STACObject) {
+            this.targetObject = (STACObject) target;
+        } else  {
+            this.targetHref = (String) target;
+        }
+    }
+
     public RelType getRel() {
         return rel;
     }
@@ -32,24 +45,15 @@ public class Link {
     public void setHref(String href) {
         this.href = href;
     }
-        
-    public Link(LinkBuilder builder) {
-        this.rel = builder.rel;
-        this.target = builder.target;
-        this.mediaType = builder.mediaType;
-        this.title = builder.title;
-        
-        if (this.target instanceof STACObject) {
-            this.targetObject = (STACObject) target;
-        } else  {
-            this.targetHref = (String) target;
-        }
-    }
     
     public void setOwner(STACObject owner) {
         this.owner = owner;
     }
-    
+        
+    public static Link root(Collection collection) {
+        return new Link.LinkBuilder().rel(RelType.ROOT).mediaType(MediaType.APPLICATION_JSON).target(collection).build();
+    }
+            
     public static class LinkBuilder {
         private RelType rel;
         private Object target;
@@ -79,7 +83,6 @@ public class Link {
         public Link build() {
             return new Link(this);
         }
-
     } 
     
     public enum MediaType {
