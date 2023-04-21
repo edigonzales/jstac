@@ -44,11 +44,7 @@ public class Item extends STACObject {
         this.removeLinks(RelType.COLLECTION);
         this.collectionId = null;
         if (collection != null) {
-            Link collectionLink = new Link.LinkBuilder().rel(RelType.COLLECTION)
-                    .target(collection)
-                    .mediaType(MediaType.APPLICATION_JSON)
-                    .build();
-            this.addLink(collectionLink);
+            this.addLink(Link.collection(collection));
             this.collectionId = collection.getId();
         }
     }

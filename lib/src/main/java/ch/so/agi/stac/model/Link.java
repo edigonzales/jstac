@@ -53,7 +53,11 @@ public class Link {
     public static Link root(Collection collection) {
         return new Link.LinkBuilder().rel(RelType.ROOT).mediaType(MediaType.APPLICATION_JSON).target(collection).build();
     }
-            
+
+    public static Link collection(Collection collection) {
+        return new Link.LinkBuilder().rel(RelType.COLLECTION).mediaType(MediaType.APPLICATION_JSON).target(collection).build();
+    }
+
     public static class LinkBuilder {
         private RelType rel;
         private Object target;
