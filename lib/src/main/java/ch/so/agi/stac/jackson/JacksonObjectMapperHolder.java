@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import ch.so.agi.stac.model.Bbox;
+import ch.so.agi.stac.model.Collection;
+import ch.so.agi.stac.model.Interval;
 
 public class JacksonObjectMapperHolder {
     
@@ -41,7 +43,8 @@ public class JacksonObjectMapperHolder {
         
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.registerModule(new JavaTimeModule());
-
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        objectMapper.addMixIn(Collection.class, CollectionMixin.class);
 
         return objectMapper;
     }

@@ -1,4 +1,4 @@
-package ch.so.agi.stac.jackson;
+package ch.so.agi.stac.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

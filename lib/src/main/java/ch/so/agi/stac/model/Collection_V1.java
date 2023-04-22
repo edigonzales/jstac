@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.so.agi.stac.jackson.Interval;
 import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 
 public class Collection_V1 extends Catalog_V1 {

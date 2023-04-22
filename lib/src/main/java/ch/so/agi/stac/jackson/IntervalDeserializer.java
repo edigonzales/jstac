@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import ch.so.agi.stac.model.Interval;
+
 public class IntervalDeserializer extends StdDeserializer<Interval> {
 
     public IntervalDeserializer() { 

@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.so.agi.stac.jackson.Interval;
 import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 import ch.so.agi.stac.model.Bbox;
 import ch.so.agi.stac.model.Catalog_V1;
 import ch.so.agi.stac.model.CatalogType;
 import ch.so.agi.stac.model.Collection_V1;
+import ch.so.agi.stac.model.Interval;
 import ch.so.agi.stac.model.Link;
 import ch.so.agi.stac.model.LinkMimeType;
 import ch.so.agi.stac.model.PublicationType;

@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -15,12 +19,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.so.agi.stac.jackson.Interval;
 import ch.so.agi.stac.jackson.JacksonObjectMapperHolder;
 import ch.so.agi.stac.model.Bbox;
 import ch.so.agi.stac.model.Catalog_V1;
+import ch.so.agi.stac.model.Collection;
 import ch.so.agi.stac.model.CatalogType;
 import ch.so.agi.stac.model.Collection_V1;
+import ch.so.agi.stac.model.Interval;
 import ch.so.agi.stac.model.Item;
 import ch.so.agi.stac.model.Link;
 import ch.so.agi.stac.model.LinkMimeType;
@@ -38,6 +43,40 @@ public class ItemTest {
     
     @Test
     public void dummy() throws Exception {
+        
+        Collection collection = new Collection.CollectionBuilder().id("ch.so.afu.abbaustellen").title("Abbaustellen")
+                .description("Abbaustellen").build();
+        
+        LocalDate localDate = LocalDate.parse("2022-12-23");
+        Item item = new Item.ItemBuilder().id("ch.so.afu.abbaustellen").datetime(localDate.atStartOfDay(ZoneId.of("UTC"))).build();
+        
+        collection.addItem(item);
+        
+        System.out.println(collection.getId());
+        System.out.println(collection.getLinks().get(0));
+        System.out.println(collection.getLinks().get(1));
+
+        
+        Collection catalog = new Collection.CollectionBuilder().id("ch.so.geo.stac").title("STAC Kanton Solothurn").build();
+        catalog.addChild(collection);
+
+        System.out.println(collection.getId());
+        System.out.println(collection.getLinks().get(0));
+        System.out.println(collection.getLinks().get(1));
+
+        System.out.println("-----------------");
+
+        System.out.println(catalog.getId());
+        System.out.println(catalog.getLinks().get(0));
+        System.out.println(catalog.getLinks().get(1));
+
+        ObjectMapper objectMapper = JacksonObjectMapperHolder.getInstance().getObjectMapper();
+        String json = objectMapper.writeValueAsString(collection);
+        System.out.println(json);
+        
+        
+        
+        
         // Prepare
 //        Path outputDirectory = Paths.get(TEST_OUT, "dummy");
 //        outputDirectory.toFile().mkdirs();

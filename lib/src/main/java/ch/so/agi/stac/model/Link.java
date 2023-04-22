@@ -1,14 +1,16 @@
 package ch.so.agi.stac.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 public class Link {
     private RelType rel;
     private String href;
     private Object target;
+    @JsonProperty("type")
     private MediaType mediaType;
     private String title;
     
@@ -17,6 +19,12 @@ public class Link {
     private String targetHref;
     private STACObject targetObject;
     
+    @Override
+    public String toString() {
+        return "Link [rel=" + rel + ", href=" + href + ", target=" + target + ", mediaType=" + mediaType + ", title="
+                + title + ", owner=" + owner + ", targetHref=" + targetHref + ", targetObject=" + targetObject + "]";
+    }
+
     public Link(LinkBuilder builder) {
         this.rel = builder.rel;
         this.target = builder.target;
@@ -30,8 +38,8 @@ public class Link {
         }
     }
 
-    public RelType getRel() {
-        return rel;
+    public String getRel() {
+        return rel.toString();
     }
 
     public void setRel(RelType rel) {
@@ -49,13 +57,51 @@ public class Link {
     public void setOwner(STACObject owner) {
         this.owner = owner;
     }
+    
+    @JsonIgnore
+    public boolean isResolved() {
+        return targetObject != null;
+    }
+    
+    @JsonIgnore
+    public STACObject getTarget() {
+        return (STACObject) target;
+    }
+    
+    @JsonIgnore
+    public String getTargetStr() {
+        if (targetHref != null) {
+            return targetHref;
+        } else if (targetObject != null) {
+            return targetObject.getSelfHref();
+        } else {
+            return null;
+        }
+    }
+    
+    @JsonIgnore
+    public boolean hasTargetRef() {
+        return targetHref != null;
+    }
         
-    public static Link root(Collection collection) {
-        return new Link.LinkBuilder().rel(RelType.ROOT).mediaType(MediaType.APPLICATION_JSON).target(collection).build();
+    public static Link root(Collection root) {
+        return new Link.LinkBuilder().rel(RelType.ROOT).mediaType(MediaType.APPLICATION_JSON).target(root).build();
     }
 
     public static Link collection(Collection collection) {
         return new Link.LinkBuilder().rel(RelType.COLLECTION).mediaType(MediaType.APPLICATION_JSON).target(collection).build();
+    }
+    
+    public static Link parent(Collection parent) {
+        return new Link.LinkBuilder().rel(RelType.PARENT).mediaType(MediaType.APPLICATION_JSON).target(parent).build();
+    }
+
+    public static Link item(Item item) {
+        return new Link.LinkBuilder().rel(RelType.ITEM).mediaType(MediaType.APPLICATION_JSON).target(item).build();
+    }
+
+    public static Link child(Collection child) {
+        return new Link.LinkBuilder().rel(RelType.COLLECTION).mediaType(MediaType.APPLICATION_JSON).target(child).build();
     }
 
     public static class LinkBuilder {
