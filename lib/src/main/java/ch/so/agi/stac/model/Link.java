@@ -10,7 +10,6 @@ public class Link {
     private RelType rel;
     private String href;
     private Object target;
-    @JsonProperty("type")
     private MediaType mediaType;
     private String title;
     
@@ -38,8 +37,8 @@ public class Link {
         }
     }
 
-    public String getRel() {
-        return rel.toString();
+    public RelType getRel() {
+        return rel;
     }
 
     public void setRel(RelType rel) {
@@ -54,21 +53,26 @@ public class Link {
         this.href = href;
     }
     
+    public MediaType getMediaType() {
+        return mediaType;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
     public void setOwner(STACObject owner) {
         this.owner = owner;
     }
     
-    @JsonIgnore
     public boolean isResolved() {
         return targetObject != null;
     }
     
-    @JsonIgnore
     public STACObject getTarget() {
         return (STACObject) target;
     }
     
-    @JsonIgnore
     public String getTargetStr() {
         if (targetHref != null) {
             return targetHref;
@@ -79,7 +83,6 @@ public class Link {
         }
     }
     
-    @JsonIgnore
     public boolean hasTargetRef() {
         return targetHref != null;
     }
@@ -104,6 +107,10 @@ public class Link {
         return new Link.LinkBuilder().rel(RelType.COLLECTION).mediaType(MediaType.APPLICATION_JSON).target(child).build();
     }
 
+    public static Link self_href(String href) {
+        return new Link.LinkBuilder().rel(RelType.SELF).mediaType(MediaType.APPLICATION_JSON).target(href).build();
+    }
+    
     public static class LinkBuilder {
         private RelType rel;
         private Object target;

@@ -76,6 +76,28 @@ public abstract class STACObject {
     }
     
     // set_self_href
+    /**
+     * Sets the absolute HREF that is represented by the {@code rel=='self'} of {@link ch.so.agi.stac.model.Link}
+     * 
+     * @param href The absolute HREF of this object. If the given HREF is not absolute, it will be transformed to an absolute HREF based on the current working directory. If this is null the call will clear the self HREF link.
+     */
+    public void setSelfHref(String href) {
+        Link rootLink = getRootLink();
+        
+        if (rootLink != null && rootLink.isResolved()) {
+            //Collection collection = ((Collection) rootLink.getTarget());
+            // Aus dem Cache löschen. Bis jetzt gibt es keinen Cache. Nicht relevant.
+        }
+        
+        removeLinks(RelType.SELF);
+        if (href != null) {
+            addLink(Link.self_href(href));
+        } 
+        
+        if (rootLink != null && rootLink.isResolved()) {
+            // In den Cache schreiben.
+        }
+    }
     
     // get_root
     @JsonIgnore

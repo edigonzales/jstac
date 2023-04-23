@@ -1,18 +1,25 @@
 package ch.so.agi.stac.model;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ch.so.agi.stac.model.Catalog.CatalogBuilder;
 import ch.so.agi.stac.model.Link.MediaType;
+import ch.so.agi.stac.model.util.Utils;
 
 public class Collection extends STACObject {
+    @JsonProperty("stac_version")
     private String stacVersion = "1.0.0";
+    @JsonProperty
     private String id;
+    @JsonProperty
     private String description;
+    @JsonProperty
     private String title;
     private String href;
     
@@ -53,10 +60,25 @@ public class Collection extends STACObject {
         
         String selfHref = this.getSelfHref();
         if (selfHref != null) {
-            System.out.println("child self href TODO");
+            System.out.println("child self href TODO...");
         }
         
         addLink(Link.child(child));
+    }
+    
+    public void normalizeHrefs(String rootHref) {
+        System.out.println("--------------------");
+        System.out.println("normalizeHrefs");
+        
+        if (!Utils.isAbsoluteHref(rootHref)) {
+            rootHref = Utils.makeAbsoluteHref(rootHref, Paths.get(".").toFile().getAbsolutePath(), true);
+            System.out.println(rootHref);
+        } 
+        System.out.println(rootHref);
+
+        
+
+
     }
     
     public static class CollectionBuilder {

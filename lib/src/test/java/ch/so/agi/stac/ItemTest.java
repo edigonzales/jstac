@@ -74,6 +74,9 @@ public class ItemTest {
         String json = objectMapper.writeValueAsString(collection);
         System.out.println(json);
         
+        collection.setSelfHref("http://localhost:8080/stac/ch.so.afu.abbaustellen/collection.json");
+        collection.normalizeHrefs("http://localhost:8080/stac/ch.so.afu_abbaustellen/");
+        
         
         
         
