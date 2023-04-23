@@ -76,6 +76,7 @@ public class Collection extends STACObject {
         } 
         System.out.println(rootHref);
 
+        // process_catalog
         
 
 
